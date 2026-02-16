@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Katran Dergi</title>
+    
+    <meta name="description" content="Katran Dergi - Kırmızı karanfil ektik, katranın bağrına. Edebiyat, sanat ve özgür düşünce dergisi.">
+    <meta name="keywords" content="katran dergi, edebiyat, sanat, düşünce, dergi, yazı, siyaset, felsefe">
+    <meta name="author" content="Katran Dergi">
+    
+    <meta property="og:title" content="Katran Dergi">
+    <meta property="og:description" content="Kırmızı karanfil ektik, katranın bağrına.">
+    <meta property="og:type" content="website">
+    
+    <style>
+        :root {
+            --katran: #0a0a0a;
+            --karanfil: #dc2626;
+            --kagit: #fefefe;
+            --toz: #e5e5e5;
+            --altin: #d97706;
+            --muted: #737373;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;600;800&display=swap');
+
+        * { 
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--kagit);
+            color: var(--katran);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(220, 38, 38, 0.03) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(220, 38, 38, 0.03) 0%, transparent 20%);
+            overflow-x: hidden;
+        }
+
+        /* --- AÇILIŞ ANİMASYONU --- */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--katran);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .karanfil-animasyonu {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            position: relative;
+        }
+
+        .karanfil-animasyonu::before,
+        .karanfil-animasyonu::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border-radius: 50%;
+            border: 3px solid var(--karanfil);
+            animation: karanfilAc 1.5s ease-out infinite;
+        }
+
+        .karanfil-animasyonu::before {
+            width: 60px;
+            height: 60px;
+            margin: -30px 0 0 -30px;
+            animation-delay: 0s;
+        }
+
+        .karanfil-animasyonu::after {
+            width: 40px;
+            height: 40px;
+            margin: -20px 0 0 -20px;
+            animation-delay: 0.2s;
+        }
+
+        @keyframes karanfilAc {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        .loading-text {
+            color: var(--karanfil);
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .loading-subtext {
+            color: var(--muted);
+            margin-top: 1rem;
+            font-style: italic;
+        }
+
+        .site-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        .site {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex: 1;
+        }
+
+        /* --- HEADER --- */
+        .yeni-header {
+            background-color: var(--katran);
+            color: var(--kagit);
+            padding: 4rem 2rem 2rem 2rem;
+            position: relative;
+            border-bottom: 8px solid var(--karanfil);
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+            margin-bottom: 3rem;
+        }
+
+        .baslik-container { text-align: center; margin-bottom: 2rem; }
+
+        .baslik-ana {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            line-height: 0.9;
+        }
+
+        .baslik-ana .vurgu { color: var(--karanfil); position: relative; }
+
+        .motto {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--karanfil);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .yeni-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.5rem; }
+
+        .yeni-nav a {
+            color: var(--kagit);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.8rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .yeni-nav a:hover {
+            background: rgba(220, 38, 38, 0.2);
+            border-color: var(--karanfil);
+            transform: translateY(-2px);
+        }
+
+        /* --- HERO & SAYI KARTI --- */
+        .yeni-hero { padding: 0 2rem 4rem 2rem; text-align: center; }
+
+        .sayi-karti {
+            background: var(--kagit);
+            border: 2px solid var(--katran);
+            padding: 3rem 2rem;
+            max-width: 700px;
+            margin: 0 auto;
+            box-shadow: 12px 12px 0px 0px var(--karanfil);
+        }
+
+        .sayi-karti h2 { font-family: 'Playfair Display', serif; font-size: 2.5rem; }
+
+        .yeni-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: var(--katran);
+            color: var(--kagit);
+            padding: 1.2rem 2.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 6px 6px 0px 0px var(--karanfil);
+            transition: all 0.3s ease;
+        }
+
+        .yeni-btn:hover {
+            background: var(--karanfil);
+            box-shadow: 8px 8px 0px 0px var(--katran);
+        }
+
+        /* --- ARŞİV --- */
+        .yeni-arsiv {
+            padding: 3rem 2rem;
+            background: var(--katran);
+            color: var(--kagit);
+            clip-path: polygon(0 5%, 100% 0, 100% 95%, 0 100%);
+        }
+
+        .arsiv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .arsiv-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            color: var(--kagit);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* --- FOOTER --- */
+        .yeni-footer {
+            background: var(--katran);
+            color: var(--kagit);
+            padding: 3rem 2rem 1.5rem;
+            border-top: 8px solid var(--karanfil);
+            clip-path: polygon(0 10%, 100% 0, 100% 100%, 0 100%);
+        }
+
+        .footer-alt { text-align: center; padding-top: 2rem; color: var(--muted); }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="karanfil-animasyonu"></div>
+            <div class="loading-text">KATRAN DERGİ</div>
+            <div class="loading-subtext">Kırmızı karanfil ektik, katranın bağrına</div>
+        </div>
+    </div>
+
+    <div class="site-wrapper">
+        <div class="site">
+            <header class="yeni-header">
+                <div class="baslik-container">
+                    <h1 class="baslik-ana"><span class="vurgu">KATRAN</span> DERGİ</h1>
+                    <div class="motto">Kırmızı karanfil ektik, katranın bağrına.</div>
+                </div>
+                <nav class="yeni-nav">
+                    <a href="index.html">Ana Sayfa</a>
+                    <a href="yazilar.html">Yazılar</a>
+                    <a href="kolektif.html">Kolektif</a>
+                    <a href="hakkinda.html">Hakkında</a>
+                    <a href="#iletisim">İletişim</a>
+                </nav>
+            </header>
+
+            <main>
+                <section class="yeni-hero">
+                    <div class="sayi-karti">
+                        <h2>Son Sayıyı Oku</h2>
+                        <div class="tarih">Ocak 2026</div>
+                        <a href="Katran Sayı-4(1).pdf" target="_blank" class="yeni-btn">PDF'İ AÇ</a>
+                        <p style="margin-top:10px; font-size:0.8rem; color:#777;">Tavsiye: Dropbox veya Word ile açınız.</p>
+                    </div>
+                </section>
+
+                <section class="yeni-arsiv" id="arsiv">
+                    <h3 style="text-align:center; margin-bottom:2rem;">Arşiv</h3>
+                    <div class="arsiv-grid">
+                        <a href="Katran Sayı-2 (Eylül-2025) (2)_compressed.pdf" target="_blank" class="arsiv-btn">
+                            <span class="ay">Eylül</span> <span class="yil">2025</span>
+                        </a>
+                        <a href="Katran Sayı-3(Ekim-2025)(1)_compressed.pdf" target="_blank" class="arsiv-btn">
+                            <span class="ay">Ekim</span> <span class="yil">2025</span>
+                        </a>
+                    </div>
+                </section>
+
+                <section id="iletisim" style="text-align:center; padding:4rem 2rem;">
+                    <h3>İletişim</h3>
+                    <a href="mailto:katrandergi@gmail.com" style="color:var(--karanfil); font-weight:700; text-decoration:none; font-size:1.2rem;">katrandergi@gmail.com</a>
+                </section>
+            </main>
+
+            <footer class="yeni-footer">
+                <div class="footer-alt">
+                    &copy; 2025 Katran Dergi. Kırmızı karanfil ektik, katranın bağrına.
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const ls = document.getElementById('loadingScreen');
+                if(ls) { ls.style.opacity = '0'; ls.style.visibility = 'hidden'; }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
