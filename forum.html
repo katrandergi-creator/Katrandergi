@@ -325,11 +325,11 @@ border-top: 1px solid #e2e8f0;
 
 <script>
 // --- SUPABASE BAĞLANTISI ---
-// BURAYI KENDİ SUPABASE PANELİNİZDEN ALACAĞINIZ DEĞERLERLE DEĞİŞTİRİN
 const SUPABASE_URL = "https://ypweazqdnbrhgxyxzigb.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlwd2VhenFkbmJyaGd4eXh6aWdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1Nzk5NDUsImV4cCI6MjA5ODE1NTk0NX0.JWtrCeaR46lObZMmveoc7SgGDKdmWysVW6Y5c4d12kU";
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// DÜZELTME: window.supabase kullanılarak kütüphane doğru şekilde başlatıldı
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- DOM ELEMENTLERİ ---
 const authSection = document.getElementById('authSection');
@@ -348,161 +348,155 @@ let currentUser = null;
 
 // --- 1. OTURUM DURUMU KONTROLÜ ---
 supabase.auth.onAuthStateChange((event, session) => {
-currentUser = session?.user || null;
-if (currentUser) {
-authSection.classList.add('hidden');
-forumFormSection.classList.remove('hidden');
-welcomeText.innerText = `Merhaba, ${currentUser.email}`;
-} else {
-authSection.classList.remove('hidden');
-forumFormSection.classList.add('hidden');
-}
-loadPosts();
+    currentUser = session?.user || null;
+    if (currentUser) {
+        authSection.classList.add('hidden');
+        forumFormSection.classList.remove('hidden');
+        welcomeText.innerText = `Merhaba, ${currentUser.email}`;
+    } else {
+        authSection.classList.remove('hidden');
+        forumFormSection.classList.add('hidden');
+    }
+    loadPosts();
 });
 
 // --- 2. GİRİŞ / KAYIT İŞLEMLERİ ---
 toggleAuth.addEventListener('click', () => {
-isSignUpMode = !isSignUpMode;
-authTitle.innerText = isSignUpMode ? "Yeni Hesap Oluştur": "Kolektif Diyaloğa Katıl";
-authBtn.innerText = isSignUpMode ? "Kayıt Ol": "Giriş Yap";
-toggleAuth.innerText = isSignUpMode ? "Zaten hesabım var": "Hesap Oluştur";
+    isSignUpMode = !isSignUpMode;
+    authTitle.innerText = isSignUpMode ? "Yeni Hesap Oluştur": "Kolektif Diyaloğa Katıl";
+    authBtn.innerText = isSignUpMode ? "Kayıt Ol": "Giriş Yap";
+    toggleAuth.innerText = isSignUpMode ? "Zaten hesabım var": "Hesap Oluştur";
 });
 
 authForm.addEventListener('submit', async (e) => {
-e.preventDefault();
-const email = document.getElementById('authEmail').value;
-const password = document.getElementById('authPassword').value;
+    e.preventDefault();
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPassword').value;
 
-if (isSignUpMode) {
-const {
-error
-} = await supabase.auth.signUp({
-email, password
-});
-if (error) alert("Kayıt hatası: " + error.message);
-else alert("Kayıt başarılı! Giriş yapabilirsiniz. (Eğer e-posta doğrulaması aktifse gelen kutunuzu kontrol edin)");
-} else {
-const {
-error
-} = await supabase.auth.signInWithPassword({
-email, password
-});
-if (error) alert("Giriş hatası: " + error.message);
-}
+    try {
+        if (isSignUpMode) {
+            const { error } = await supabase.auth.signUp({ email, password });
+            if (error) alert("Kayıt hatası: " + error.message);
+            else alert("Kayıt başarılı! Eğer panelde e-posta doğrulaması aktifse gelen kutunuzu kontrol edin, aktif değilse direkt giriş yapabilirsiniz.");
+        } else {
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) alert("Giriş hatası: " + error.message);
+        }
+    } catch (err) {
+        alert("Beklenmedik bir hata oluştu: " + err.message);
+    }
 });
 
 logoutBtn.addEventListener('click', () => supabase.auth.signOut());
 
 // --- 3. FORUM BAŞLIĞI OLUŞTURMA ---
 newPostForm.addEventListener('submit', async (e) => {
-e.preventDefault();
-const title = document.getElementById('postTitle').value;
-const content = document.getElementById('postContent').value;
+    e.preventDefault();
+    const title = document.getElementById('postTitle').value;
+    const content = document.getElementById('postContent').value;
 
-const {
-error
-} = await supabase.auth.getSession().then(({
-data: {
-session
-}
-}) => {
-return supabase.from('forum_posts').insert([{
-title, content, user_email: currentUser.email, user_id: currentUser.id
-}]);
-});
+    try {
+        const { error } = await supabase.from('forum_posts').insert([
+            { title, content, user_email: currentUser.email, user_id: currentUser.id }
+        ]);
 
-if (error) alert("Paylaşım hatası: " + error.message);
-else {
-newPostForm.reset();
-loadPosts();
-}
+        if (error) alert("Paylaşım hatası: " + error.message);
+        else {
+            newPostForm.reset();
+            loadPosts();
+        }
+    } catch (err) {
+        alert("Paylaşım gönderilirken hata oluştu.");
+    }
 });
 
 // --- 4. VERİLERİ ÇEKME VE LİSTELEME ---
 async function loadPosts() {
-postsContainer.innerHTML = "<p style='text-align:center;'>Tartışmalar yükleniyor...</p>";
+    if (!postsContainer) return;
+    postsContainer.innerHTML = "<p style='text-align:center;'>Tartışmalar yükleniyor...</p>";
 
-// Postları ve onlara ait yorumları çekiyoruz
-const {
-data: posts, error
-} = await supabase
-.from('forum_posts')
-.select(`*, forum_comments(*)`)
-.order('created_at',
-{
-ascending: false
-});
+    try {
+        const { data: posts, error } = await supabase
+            .from('forum_posts')
+            .select(`*, forum_comments(*)`)
+            .order('created_at', { ascending: false });
 
-if (error) {
-postsContainer.innerHTML = "<p>Yükleme hatası oluştu.</p>";
-return;
-}
+        if (error) {
+            postsContainer.innerHTML = "<p>Yükleme hatası oluştu: " + error.message + "</p>";
+            return;
+        }
 
-if (posts.length === 0) {
-postsContainer.innerHTML = "<p style='text-align:center; color:var(--muted);'>Henüz bir tartışma başlatılmamış. İlk adımı sen at!</p>";
-return;
-}
+        if (!posts || posts.length === 0) {
+            postsContainer.innerHTML = "<p style='text-align:center; color:var(--muted);'>Henüz bir tartışma başlatılmamış. İlk adımı sen at!</p>";
+            return;
+        }
 
-postsContainer.innerHTML = "";
-posts.forEach(post => {
-const date = new Date(post.created_at).toLocaleDateString('tr-TR');
+        postsContainer.innerHTML = "";
+        posts.forEach(post => {
+            const date = new Date(post.created_at).toLocaleDateString('tr-TR');
 
-// Yorumları oluştur
-let commentsHTML = "";
-post.forum_comments.forEach(comment => {
-commentsHTML += `
-<div class="comment">
-<div class="comment-meta">${comment.user_email} • ${new Date(comment.created_at).toLocaleDateString('tr-TR')}</div>
-<div>${comment.content}</div>
-</div>
-`;
-});
+            let commentsHTML = "";
+            if (post.forum_comments) {
+                post.forum_comments.forEach(comment => {
+                    commentsHTML += `
+                        <div class="comment">
+                            <div class="comment-meta">${comment.user_email} • ${new Date(comment.created_at).toLocaleDateString('tr-TR')}</div>
+                            <div>${comment.content}</div>
+                        </div>
+                    `;
+                });
+            }
 
-// Yorum yazma formu (Sadece giriş yapmışsa görünür)
-const commentFormHTML = currentUser ? `
-<form onsubmit="addComment(event, '${post.id}')" style="display:flex; gap:10px; margin-top:10px;">
-<input type="text" placeholder="Fikrinizi ekleyin..." required style="padding:8px;">
-<button type="submit" class="btn" style="padding:8px 16px; font-size:0.9rem;">Gönder</button>
-</form>
-`: `<p style="font-size:0.85rem; color:var(--muted); margin-top:10px;">Yorum yazmak için giriş yapmalısınız.</p>`;
+            const commentFormHTML = currentUser ? `
+                <form onsubmit="addComment(event, '${post.id}')" style="display:flex; gap:10px; margin-top:10px;">
+                    <input type="text" placeholder="Fikrinizi ekleyin..." required style="padding:8px;">
+                    <button type="submit" class="btn" style="padding:8px 16px; font-size:0.9rem;">Gönder</button>
+                </form>
+            `: `<p style="font-size:0.85rem; color:var(--muted); margin-top:10px;">Yorum yazmak için giriş yapmalısınız.</p>`;
 
-const postElement = document.createElement('article');
-postElement.className = 'post-card';
-postElement.innerHTML = `
-<div class="post-meta">
-<span>Fikir Sahibi: ${post.user_email}</span>
-<span>${date}</span>
-</div>
-<h3 class="post-title">${post.title}</h3>
-<p style="white-space: pre-wrap; margin-bottom:15px;">${post.content}</p>
+            const postElement = document.createElement('article');
+            postElement.className = 'post-card';
+            postElement.innerHTML = `
+                <div class="post-meta">
+                    <span>Fikir Sahibi: ${post.user_email}</span>
+                    <span>${date}</span>
+                </div>
+                <h3 class="post-title">${post.title}</h3>
+                <p style="white-space: pre-wrap; margin-bottom:15px;">${post.content}</p>
 
-<div class="comments-section">
-<h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--ink)">Yorumlar (${post.forum_comments.length})</h4>
-<div class="comments-list">${commentsHTML}</div>
-${commentFormHTML}
-</div>
-`;
-postsContainer.appendChild(postElement);
-});
+                <div class="comments-section">
+                    <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--ink)">Yorumlar (${post.forum_comments ? post.forum_comments.length : 0})</h4>
+                    <div class="comments-list">${commentsHTML}</div>
+                    ${commentFormHTML}
+                </div>
+            `;
+            postsContainer.appendChild(postElement);
+        });
+    } catch (err) {
+        postsContainer.innerHTML = "<p>Bağlantı hatası yaşandı.</p>";
+    }
 }
 
 // --- 5. YORUM EKLEME FONKSİYONU ---
 async function addComment(e, postId) {
-e.preventDefault();
-const input = e.target.querySelector('input');
-const content = input.value;
+    e.preventDefault();
+    const input = e.target.querySelector('input');
+    const content = input.value;
 
-const {
-error
-} = await supabase.from('forum_comments').insert([{
-post_id: postId, content, user_email: currentUser.email, user_id: currentUser.id
-}]);
+    try {
+        const { error } = await supabase.from('forum_comments').insert([
+            { post_id: postId, content, user_email: currentUser.email, user_id: currentUser.id }
+        ]);
 
-if (error) alert("Yorum eklenemedi: " + error.message);
-else {
-loadPosts();
+        if (error) alert("Yorum eklenemedi: " + error.message);
+        else {
+            loadPosts();
+        }
+    } catch (err) {
+        alert("Yorum gönderilirken bir hata oluştu.");
+    }
 }
-}
+
 </script>
 </body>
 </html>
