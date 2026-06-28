@@ -111,8 +111,8 @@
     transform: translateY(-2px);
     }
 
-    /* Auth & Form Styles */
-    .auth-box, .forum-form {
+    /* Auth, Profile & Form Styles */
+    .auth-box, .forum-form, .profile-box {
     background: var(--card);
     padding: 30px;
     border-radius: var(--radius);
@@ -122,7 +122,7 @@
     position: relative;
     overflow: hidden;
     }
-    .auth-box::before, .forum-form::before {
+    .auth-box::before, .forum-form::before, .profile-box::before {
     content: '';
     position: absolute;
     top: 0;
@@ -183,6 +183,10 @@
     margin-left: 10px;
     cursor: pointer;
     border: none;
+    }
+    .btn-secondary {
+    background: #e2e8f0;
+    color: var(--ink);
     }
 
     /* Forum Post Cards */
@@ -295,10 +299,25 @@
         </form>
     </section>
 
+    <section id="profileSection" class="profile-box hidden">
+        <h2>Profil Ayarları</h2>
+        <form id="profileForm">
+            <div class="input-group">
+                <label>Görünecek İsim (Ad Soyad veya Mahlas)</label>
+                <input type="text" id="profileName" required placeholder="Fikirlerinizin yanında görünecek isim...">
+            </div>
+            <button type="submit" class="btn">Profili Güncelle</button>
+            <button type="button" id="closeProfileBtn" class="btn btn-secondary" style="margin-left: 10px;">Kapat</button>
+        </form>
+    </section>
+
     <section id="forumFormSection" class="forum-form hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <span id="welcomeText" style="font-weight: 600;"></span>
-            <button class="btn" id="logoutBtn" style="padding: 6px 12px; font-size: 0.85rem;">Çıkış Yap</button>
+            <div>
+                <button class="btn btn-secondary" id="openProfileBtn" style="padding: 6px 12px; font-size: 0.85rem; margin-right: 5px;">Profili Düzenle</button>
+                <button class="btn" id="logoutBtn" style="padding: 6px 12px; font-size: 0.85rem;">Çıkış Yap</button>
+            </div>
         </div>
         <h2>Yeni Bir Tartışma Başlat</h2>
         <form id="newPostForm">
@@ -328,12 +347,12 @@
 const SUPABASE_URL = "https://amsidonkrwwzkcbzuoct.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_Jv_jxq7c8ZFws0g8S_nklA_xOMPLxpL";
 
-// Çakışmayı önlemek için değişken ismini 'supabaseClient' olarak değiştirdik!
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- DOM ELEMENTLERİ ---
 const authSection = document.getElementById('authSection');
 const forumFormSection = document.getElementById('forumFormSection');
+const profileSection = document.getElementById('profileSection');
 const authForm = document.getElementById('authForm');
 const authTitle = document.getElementById('authTitle');
 const authBtn = document.getElementById('authBtn');
@@ -342,9 +361,21 @@ const welcomeText = document.getElementById('welcomeText');
 const logoutBtn = document.getElementById('logoutBtn');
 const newPostForm = document.getElementById('newPostForm');
 const postsContainer = document.getElementById('postsContainer');
+const profileForm = document.getElementById('profileForm');
+const profileNameInput = document.getElementById('profileName');
+const openProfileBtn = document.getElementById('openProfileBtn');
+const closeProfileBtn = document.getElementById('closeProfileBtn');
 
 let isSignUpMode = false;
 let currentUser = null;
+
+// Yardımcı fonksiyon: Kullanıcı adını belirle (Önce metadata ismine bakar, yoksa e-posta verir)
+function getUserDisplayName(user) {
+    if (user && user.user_metadata && user.user_metadata.display_name) {
+        return user.user_metadata.display_name;
+    }
+    return user ? user.email : "Anonim";
+}
 
 // --- 1. OTURUM DURUMU KONTROLÜ ---
 supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -352,13 +383,22 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     if (currentUser) {
         authSection.classList.add('hidden');
         forumFormSection.classList.remove('hidden');
-        welcomeText.innerText = `Merhaba, ${currentUser.email}`;
+        
+        // Hoş geldiniz mesajında artık ayarlanan ismi gösteriyoruz
+        const nameToShow = getUserDisplayName(currentUser);
+        welcomeText.innerText = `Merhaba, ${nameToShow}`;
+        profileNameInput.value = currentUser.user_metadata?.display_name || "";
     } else {
         authSection.classList.remove('hidden');
         forumFormSection.classList.add('hidden');
+        profileSection.classList.add('hidden');
     }
     loadPosts();
 });
+
+// --- Profil Paneli Butonları ---
+openProfileBtn.addEventListener('click', () => profileSection.classList.remove('hidden'));
+closeProfileBtn.addEventListener('click', () => profileSection.classList.add('hidden'));
 
 // --- 2. GİRİŞ / KAYIT İŞLEMLERİ ---
 toggleAuth.addEventListener('click', () => {
@@ -389,15 +429,40 @@ authForm.addEventListener('submit', async (e) => {
 
 logoutBtn.addEventListener('click', () => supabaseClient.auth.signOut());
 
+// --- PROFİL GÜNCELLEME İŞLEMİ (Yeni!) ---
+profileForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newName = profileNameInput.value.trim();
+
+    try {
+        const { data, error } = await supabaseClient.auth.updateUser({
+            data: { display_name: newName }
+        });
+
+        if (error) {
+            alert("Profil güncellenirken hata oluştu: " + error.message);
+        } else {
+            alert("Profil başarıyla güncellendi!");
+            profileSection.classList.add('hidden');
+            // İsmi hemen ekranda yenileyelim
+            welcomeText.innerText = `Merhaba, ${newName}`;
+            loadPosts(); // Gönderilerdeki isimleri de güncellemek için listeyi yenile
+        }
+    } catch (err) {
+        alert("Profil güncellenirken beklenmedik bir hata oluştu.");
+    }
+});
+
 // --- 3. FORUM BAŞLIĞI OLUŞTURMA ---
 newPostForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = document.getElementById('postTitle').value;
     const content = document.getElementById('postContent').value;
+    const displayName = getUserDisplayName(currentUser);
 
     try {
         const { error } = await supabaseClient.from('forum_posts').insert([
-            { title, content, user_email: currentUser.email, user_id: currentUser.id }
+            { title, content, user_email: displayName, user_id: currentUser.id }
         ]);
 
         if (error) alert("Paylaşım hatası: " + error.message);
@@ -482,10 +547,11 @@ async function addComment(e, postId) {
     e.preventDefault();
     const input = e.target.querySelector('input');
     const content = input.value;
+    const displayName = getUserDisplayName(currentUser);
 
     try {
         const { error } = await supabaseClient.from('forum_comments').insert([
-            { post_id: postId, content, user_email: currentUser.email, user_id: currentUser.id }
+            { post_id: postId, content, user_email: displayName, user_id: currentUser.id }
         ]);
 
         if (error) alert("Yorum eklenemedi: " + error.message);
