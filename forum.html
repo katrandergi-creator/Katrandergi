@@ -325,12 +325,11 @@
 
 <script>
 // --- SUPABASE BAĞLANTISI ---
-// NOT: Buradaki bilgileri kendi yeni projenizin linki ve Publishable key'i ile güncellediğinizden emin olun.
 const SUPABASE_URL = "https://amsidonkrwwzkcbzuoct.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_Jv_jxq7c8ZFws0g8S_nklA_xOMPLxpL";
 
-// Çift tanımlama hatası giderildi. Supabase istemcisi sadece 1 kere oluşturuluyor.
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Çakışmayı önlemek için değişken ismini 'supabaseClient' olarak değiştirdik!
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- DOM ELEMENTLERİ ---
 const authSection = document.getElementById('authSection');
@@ -348,7 +347,7 @@ let isSignUpMode = false;
 let currentUser = null;
 
 // --- 1. OTURUM DURUMU KONTROLÜ ---
-supabase.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange((event, session) => {
     currentUser = session?.user || null;
     if (currentUser) {
         authSection.classList.add('hidden');
@@ -376,11 +375,11 @@ authForm.addEventListener('submit', async (e) => {
 
     try {
         if (isSignUpMode) {
-            const { error } = await supabase.auth.signUp({ email, password });
+            const { error } = await supabaseClient.auth.signUp({ email, password });
             if (error) alert("Kayıt hatası: " + error.message);
             else alert("Kayıt başarılı! Lütfen e-posta adresinize gönderilen doğrulama linkine tıklayın.");
         } else {
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) alert("Giriş hatası: " + error.message);
         }
     } catch (err) {
@@ -388,7 +387,7 @@ authForm.addEventListener('submit', async (e) => {
     }
 });
 
-logoutBtn.addEventListener('click', () => supabase.auth.signOut());
+logoutBtn.addEventListener('click', () => supabaseClient.auth.signOut());
 
 // --- 3. FORUM BAŞLIĞI OLUŞTURMA ---
 newPostForm.addEventListener('submit', async (e) => {
@@ -397,7 +396,7 @@ newPostForm.addEventListener('submit', async (e) => {
     const content = document.getElementById('postContent').value;
 
     try {
-        const { error } = await supabase.from('forum_posts').insert([
+        const { error } = await supabaseClient.from('forum_posts').insert([
             { title, content, user_email: currentUser.email, user_id: currentUser.id }
         ]);
 
@@ -417,7 +416,7 @@ async function loadPosts() {
     postsContainer.innerHTML = "<p style='text-align:center;'>Tartışmalar yükleniyor...</p>";
 
     try {
-        const { data: posts, error } = await supabase
+        const { data: posts, error } = await supabaseClient
             .from('forum_posts')
             .select(`*, forum_comments(*)`)
             .order('created_at', { ascending: false });
@@ -485,7 +484,7 @@ async function addComment(e, postId) {
     const content = input.value;
 
     try {
-        const { error } = await supabase.from('forum_comments').insert([
+        const { error } = await supabaseClient.from('forum_comments').insert([
             { post_id: postId, content, user_email: currentUser.email, user_id: currentUser.id }
         ]);
 
