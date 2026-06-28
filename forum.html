@@ -369,7 +369,42 @@ const closeProfileBtn = document.getElementById('closeProfileBtn');
 let isSignUpMode = false;
 let currentUser = null;
 
-// Yardımcı fonksiyon: Kullanıcı adını belirle (Önce metadata ismine bakar, yoksa e-posta verir)
+// --- SİBER MODERASYON BOTU (YENİ!) ---
+// Forumun amacından sapmasını engelleyen akıllı filtreleme fonksiyonu
+function moderasyonBotuKontrol(metin) {
+    const temizMetin = metin.toLowerCase();
+    
+    // 1. Yasaklı Kelime Listesi (Evlilik programı jargonu)
+    const yasakliKelimeler = [
+        "evlilik", "evlenmek", "evlenecek", "arıyorum", "talibim", "talip", 
+        "yaşındayım bayan", "yaşındayım erkek", "dul", "ciddi ilişki", "koca arıyorum", 
+        "karı arıyorum", "bayanım", "erkek arkadaş", "kız arkadaş", "tanışmak isteyen", 
+        "whatsapp", "instagram adresim", "dmden"
+    ];
+
+    // Kelime kontrolü
+    for (let kelime of yasakliKelimeler) {
+        if (temizMetin.includes(kelime)) {
+            return {
+                uygunsuz: true,
+                neden: `"${kelime}" gibi izdivaç/tanışma odaklı ifadeler forum kurallarına aykırıdır.`
+            };
+        }
+    }
+
+    // 2. Telefon Numarası Tespiti (Regex ile peş peşe gelen sayıları engelleme)
+    const telefonRegex = /(0\s?[2345][0-9]{2}\s?[0-9]{3}\s?[0-9]{2}\s?[0-9]{2})|([5][0-9]{9})/g;
+    if (telefonRegex.test(temizMetin.replace(/\s/g, ''))) {
+        return {
+            uygunsuz: true,
+            neden: "Güvenliğiniz ve forum düzeni için telefon numarası paylaşılması kesinlikle yasaktır."
+        };
+    }
+
+    return { uygunsuz: false };
+}
+
+// Yardımcı fonksiyon: Kullanıcı adını belirle
 function getUserDisplayName(user) {
     if (user && user.user_metadata && user.user_metadata.display_name) {
         return user.user_metadata.display_name;
@@ -384,7 +419,6 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         authSection.classList.add('hidden');
         forumFormSection.classList.remove('hidden');
         
-        // Hoş geldiniz mesajında artık ayarlanan ismi gösteriyoruz
         const nameToShow = getUserDisplayName(currentUser);
         welcomeText.innerText = `Merhaba, ${nameToShow}`;
         profileNameInput.value = currentUser.user_metadata?.display_name || "";
@@ -429,10 +463,17 @@ authForm.addEventListener('submit', async (e) => {
 
 logoutBtn.addEventListener('click', () => supabaseClient.auth.signOut());
 
-// --- PROFİL GÜNCELLEME İŞLEMİ (Yeni!) ---
+// --- PROFİL GÜNCELLEME İŞLEMİ ---
 profileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const newName = profileNameInput.value.trim();
+
+    // İsim alanını da bot süzgecinden geçiriyoruz
+    const botKontrol = moderasyonBotuKontrol(newName);
+    if (botKontrol.uygunsuz) {
+        alert(`Sistem Uyarısı: Belirlediğiniz isim uygun bulunmadı. \nNeden: ${botKontrol.neden}`);
+        return;
+    }
 
     try {
         const { data, error } = await supabaseClient.auth.updateUser({
@@ -444,9 +485,8 @@ profileForm.addEventListener('submit', async (e) => {
         } else {
             alert("Profil başarıyla güncellendi!");
             profileSection.classList.add('hidden');
-            // İsmi hemen ekranda yenileyelim
             welcomeText.innerText = `Merhaba, ${newName}`;
-            loadPosts(); // Gönderilerdeki isimleri de güncellemek için listeyi yenile
+            loadPosts(); 
         }
     } catch (err) {
         alert("Profil güncellenirken beklenmedik bir hata oluştu.");
@@ -459,6 +499,19 @@ newPostForm.addEventListener('submit', async (e) => {
     const title = document.getElementById('postTitle').value;
     const content = document.getElementById('postContent').value;
     const displayName = getUserDisplayName(currentUser);
+
+    // Başlık ve İçeriği Bot Denetimine Sokuyoruz!
+    const botKontrolBaslik = moderasyonBotuKontrol(title);
+    const botKontrolIcerik = moderasyonBotuKontrol(content);
+
+    if (botKontrolBaslik.uygunsuz) {
+        alert(`Katran Bot Engeli: Başlık uygun bulunmadı!\nNeden: ${botKontrolBaslik.neden}`);
+        return;
+    }
+    if (botKontrolIcerik.uygunsuz) {
+        alert(`Katran Bot Engeli: Gönderi içeriği uygun bulunmadı!\nNeden: ${botKontrolIcerik.neden}`);
+        return;
+    }
 
     try {
         const { error } = await supabaseClient.from('forum_posts').insert([
@@ -548,6 +601,13 @@ async function addComment(e, postId) {
     const input = e.target.querySelector('input');
     const content = input.value;
     const displayName = getUserDisplayName(currentUser);
+
+    // Yorumları da Bot Denetimine Sokuyoruz!
+    const botKontrolYorum = moderasyonBotuKontrol(content);
+    if (botKontrolYorum.uygunsuz) {
+        alert(`Katran Bot Engeli: Yorumunuz uygun bulunmadı!\nNeden: ${botKontrolYorum.neden}`);
+        return;
+    }
 
     try {
         const { error } = await supabaseClient.from('forum_comments').insert([
