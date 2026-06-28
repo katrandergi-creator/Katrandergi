@@ -188,6 +188,18 @@
     background: #e2e8f0;
     color: var(--ink);
     }
+    .btn-danger {
+    background: #ef4444;
+    color: white;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    }
+    .btn-danger:hover {
+    background: #dc2626;
+    }
 
     /* Forum Post Cards */
     .post-card {
@@ -198,6 +210,7 @@
     margin-bottom: 20px;
     border: 1px solid rgba(0,0,0,0.05);
     transition: all 0.3s ease;
+    position: relative;
     }
     .post-card:hover {
     transform: translateY(-3px);
@@ -208,6 +221,7 @@
     font-size: 0.85rem;
     color: var(--muted);
     margin-bottom: 10px;
+    align-items: center;
     }
     .post-title {
     color: var(--accent);
@@ -228,8 +242,12 @@
     border-radius: 8px;
     margin-bottom: 8px;
     font-size: 0.95rem;
+    position: relative;
     }
     .comment-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 0.75rem;
     color: var(--muted);
     margin-bottom: 4px;
@@ -349,6 +367,11 @@ const SUPABASE_ANON_KEY = "sb_publishable_Jv_jxq7c8ZFws0g8S_nklA_xOMPLxpL";
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// --- ⚠️ DIKKAT: YÖNETICI AYARI ⚠️ ---
+// Kendi admin e-postanı buraya küçük harflerle yaz. 
+// Bu e-posta ile girildiğinde sitedeki HER ŞEYİ silme butonu aktif olur.
+const ADMIN_EMAIL = "yaynuray756@gmail.com"; 
+
 // --- DOM ELEMENTLERİ ---
 const authSection = document.getElementById('authSection');
 const forumFormSection = document.getElementById('forumFormSection');
@@ -369,12 +392,9 @@ const closeProfileBtn = document.getElementById('closeProfileBtn');
 let isSignUpMode = false;
 let currentUser = null;
 
-// --- SİBER MODERASYON BOTU (YENİ!) ---
-// Forumun amacından sapmasını engelleyen akıllı filtreleme fonksiyonu
+// --- SİBER MODERASYON BOTU ---
 function moderasyonBotuKontrol(metin) {
     const temizMetin = metin.toLowerCase();
-    
-    // 1. Yasaklı Kelime Listesi (Evlilik programı jargonu)
     const yasakliKelimeler = [
         "evlilik", "evlenmek", "evlenecek", "arıyorum", "talibim", "talip", 
         "yaşındayım bayan", "yaşındayım erkek", "dul", "ciddi ilişki", "koca arıyorum", 
@@ -382,29 +402,19 @@ function moderasyonBotuKontrol(metin) {
         "whatsapp", "instagram adresim", "dmden"
     ];
 
-    // Kelime kontrolü
     for (let kelime of yasakliKelimeler) {
         if (temizMetin.includes(kelime)) {
-            return {
-                uygunsuz: true,
-                neden: `"${kelime}" gibi izdivaç/tanışma odaklı ifadeler forum kurallarına aykırıdır.`
-            };
+            return { uygunsuz: true, neden: `"${kelime}" gibi izdivaç/tanışma odaklı ifadeler forum kurallarına aykırıdır.` };
         }
     }
 
-    // 2. Telefon Numarası Tespiti (Regex ile peş peşe gelen sayıları engelleme)
     const telefonRegex = /(0\s?[2345][0-9]{2}\s?[0-9]{3}\s?[0-9]{2}\s?[0-9]{2})|([5][0-9]{9})/g;
     if (telefonRegex.test(temizMetin.replace(/\s/g, ''))) {
-        return {
-            uygunsuz: true,
-            neden: "Güvenliğiniz ve forum düzeni için telefon numarası paylaşılması kesinlikle yasaktır."
-        };
+        return { uygunsuz: true, neden: "Güvenliğiniz ve forum düzeni için telefon numarası paylaşılması kesinlikle yasaktır." };
     }
-
     return { uygunsuz: false };
 }
 
-// Yardımcı fonksiyon: Kullanıcı adını belirle
 function getUserDisplayName(user) {
     if (user && user.user_metadata && user.user_metadata.display_name) {
         return user.user_metadata.display_name;
@@ -430,7 +440,6 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     loadPosts();
 });
 
-// --- Profil Paneli Butonları ---
 openProfileBtn.addEventListener('click', () => profileSection.classList.remove('hidden'));
 closeProfileBtn.addEventListener('click', () => profileSection.classList.add('hidden'));
 
@@ -468,7 +477,6 @@ profileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const newName = profileNameInput.value.trim();
 
-    // İsim alanını da bot süzgecinden geçiriyoruz
     const botKontrol = moderasyonBotuKontrol(newName);
     if (botKontrol.uygunsuz) {
         alert(`Sistem Uyarısı: Belirlediğiniz isim uygun bulunmadı. \nNeden: ${botKontrol.neden}`);
@@ -500,7 +508,6 @@ newPostForm.addEventListener('submit', async (e) => {
     const content = document.getElementById('postContent').value;
     const displayName = getUserDisplayName(currentUser);
 
-    // Başlık ve İçeriği Bot Denetimine Sokuyoruz!
     const botKontrolBaslik = moderasyonBotuKontrol(title);
     const botKontrolIcerik = moderasyonBotuKontrol(content);
 
@@ -549,17 +556,29 @@ async function loadPosts() {
             return;
         }
 
+        const isAdmin = currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
         postsContainer.innerHTML = "";
         posts.forEach(post => {
             const date = new Date(post.created_at).toLocaleDateString('tr-TR');
 
+            // Gönderiyi paylaşan kişi mi yoksa admin mi kontrolü
+            const isPostOwner = currentUser && currentUser.id === post.user_id;
+            const showPostDeleteBtn = isPostOwner || isAdmin;
+
             let commentsHTML = "";
             if (post.forum_comments) {
                 post.forum_comments.forEach(comment => {
+                    const isCommentOwner = currentUser && currentUser.id === comment.user_id;
+                    const showCommentDeleteBtn = isCommentOwner || isAdmin;
+
                     commentsHTML += `
                         <div class="comment">
-                            <div class="comment-meta">${comment.user_email} • ${new Date(comment.created_at).toLocaleDateString('tr-TR')}</div>
-                            <div>${comment.content}</div>
+                            <div class="comment-meta">
+                                <span>${comment.user_email} • ${new Date(comment.created_at).toLocaleDateString('tr-TR')}</span>
+                                ${showCommentDeleteBtn ? `<button onclick="deleteComment('${comment.id}')" class="btn-danger">Sil</button>` : ''}
+                            </div>
+                            <div style="margin-top:5px;">${comment.content}</div>
                         </div>
                     `;
                 });
@@ -577,7 +596,10 @@ async function loadPosts() {
             postElement.innerHTML = `
                 <div class="post-meta">
                     <span>Fikir Sahibi: ${post.user_email}</span>
-                    <span>${date}</span>
+                    <div>
+                        <span style="margin-right:10px;">${date}</span>
+                        ${showPostDeleteBtn ? `<button onclick="deletePost('${post.id}')" class="btn-danger">Başlığı Sil</button>` : ''}
+                    </div>
                 </div>
                 <h3 class="post-title">${post.title}</h3>
                 <p style="white-space: pre-wrap; margin-bottom:15px;">${post.content}</p>
@@ -602,7 +624,6 @@ async function addComment(e, postId) {
     const content = input.value;
     const displayName = getUserDisplayName(currentUser);
 
-    // Yorumları da Bot Denetimine Sokuyoruz!
     const botKontrolYorum = moderasyonBotuKontrol(content);
     if (botKontrolYorum.uygunsuz) {
         alert(`Katran Bot Engeli: Yorumunuz uygun bulunmadı!\nNeden: ${botKontrolYorum.neden}`);
@@ -620,6 +641,40 @@ async function addComment(e, postId) {
         }
     } catch (err) {
         alert("Yorum gönderilirken bir hata oluştu.");
+    }
+}
+
+// --- 🗑️ 6. SİLME FONKSİYONLARI (YENİ!) ---
+
+// Başlık/Gönderi Silme
+async function deletePost(postId) {
+    if(!confirm("Bu tartışma başlığını ve ona bağlı tüm yorumları tamamen silmek istediğinize emin misiniz?")) return;
+
+    try {
+        // Önce gönderiye bağlı yorumları temizleyelim (Veritabanı kısıtlaması hatası vermemesi için)
+        await supabaseClient.from('forum_comments').delete().eq('post_id', postId);
+        
+        // Sonra ana başlığı silelim
+        const { error } = await supabaseClient.from('forum_posts').delete().eq('id', postId);
+
+        if (error) alert("Silme hatası: " + error.message);
+        else loadPosts();
+    } catch (err) {
+        alert("İşlem yapılırken bir hata oluştu.");
+    }
+}
+
+// Yorum Silme
+async function deleteComment(commentId) {
+    if(!confirm("Bu yorumu silmek istediğinize emin misiniz?")) return;
+
+    try {
+        const { error } = await supabaseClient.from('forum_comments').delete().eq('id', commentId);
+
+        if (error) alert("Yorum silinemedi: " + error.message);
+        else loadPosts();
+    } catch (err) {
+        alert("İşlem yapılırken bir hata oluştu.");
     }
 }
 </script>
