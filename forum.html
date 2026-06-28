@@ -2,335 +2,334 @@
 <html lang="tr">
 <head>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
+    <script>eruda.init();</script>
     <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Katran Dergi - Forum</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Katran Dergi - Forum</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <style>
+    nav a {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    nav a svg {
+        flex-shrink: 0;
+    }
+    :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --ink: #1e293b;
+    --muted: #64748b;
+    --accent: #dc2626;
+    --radius: 16px;
+    --maxwidth: 880px;
+    --shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    --gradient: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    }
 
-<style>
-nav a {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px; /* İkon ile yazı arasındaki boşluk */
-}
-nav a svg {
-    flex-shrink: 0;
-}
-:root {
---bg: #f8fafc;
---card: #ffffff;
---ink: #1e293b;
---muted: #64748b;
---accent: #dc2626;
---radius: 16px;
---maxwidth: 880px;
---shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
---gradient: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-}
+    * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    }
+    body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+    }
 
-* {
-box-sizing: border-box;
-margin: 0;
-padding: 0;
-}
-body {
-margin: 0;
-font-family: 'Inter', sans-serif;
-background: var(--bg);
-color: var(--ink);
-line-height: 1.6;
-}
+    .site-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
 
-.site-wrapper {
-min-height: 100vh;
-display: flex;
-flex-direction: column;
-padding: 20px;
-background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-}
+    .site {
+    width: 100%;
+    max-width: var(--maxwidth);
+    margin: 0 auto;
+    flex: 1;
+    }
 
-.site {
-width: 100%;
-max-width: var(--maxwidth);
-margin: 0 auto;
-flex: 1;
-}
+    header {
+    background: linear-gradient(135deg, #111 0%, #2d3748 100%);
+    color: white;
+    padding: 30px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+    }
 
-header {
-background: linear-gradient(135deg, #111 0%, #2d3748 100%);
-color: white;
-padding: 30px;
-border-radius: var(--radius);
-box-shadow: var(--shadow);
-margin-bottom: 30px;
-position: relative;
-overflow: hidden;
-}
+    header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--gradient);
+    }
 
-header::before {
-content: '';
-position: absolute;
-top: 0;
-left: 0;
-right: 0;
-height: 2px;
-background: var(--gradient);
-}
+    h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    }
 
-h1 {
-margin: 0;
-font-size: 2rem;
-font-weight: 700;
-text-align: center;
-background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-}
+    nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 20px;
+    }
+    nav a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.1);
+    }
+    nav a:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-2px);
+    }
 
-nav {
-display: flex;
-flex-wrap: wrap;
-gap: 8px;
-justify-content: center;
-margin-top: 20px;
-}
-nav a {
-color: #fff;
-text-decoration: none;
-font-weight: 600;
-padding: 10px 20px;
-border-radius: 10px;
-background: rgba(255,255,255,0.08);
-transition: all 0.3s ease;
-border: 1px solid rgba(255,255,255,0.1);
-}
-nav a:hover {
-background: rgba(255,255,255,0.15);
-transform: translateY(-2px);
-}
+    /* Auth & Form Styles */
+    .auth-box, .forum-form {
+    background: var(--card);
+    padding: 30px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 30px;
+    border: 1px solid rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+    }
+    .auth-box::before, .forum-form::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--gradient);
+    }
 
-/* Auth & Form Styles */
-.auth-box, .forum-form {
-background: var(--card);
-padding: 30px;
-border-radius: var(--radius);
-box-shadow: var(--shadow);
-margin-bottom: 30px;
-border: 1px solid rgba(0,0,0,0.05);
-position: relative;
-overflow: hidden;
-}
-.auth-box::before, .forum-form::before {
-content: '';
-position: absolute;
-top: 0;
-left: 0;
-right: 0;
-height: 3px;
-background: var(--gradient);
-}
+    h2 {
+    color: var(--accent);
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    }
 
-h2 {
-color: var(--accent);
-margin-bottom: 20px;
-font-size: 1.5rem;
-}
+    .input-group {
+    margin-bottom: 15px;
+    }
+    .input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    }
 
-.input-group {
-margin-bottom: 15px;
-}
-.input-group label {
-display: block;
-margin-bottom: 5px;
-font-weight: 600;
-font-size: 0.9rem;
-}
+    input[type="email"], input[type="password"], input[type="text"], textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: var(--bg);
+    transition: all 0.3s ease;
+    }
+    input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    }
 
-input[type="email"], input[type="password"], input[type="text"], textarea {
-width: 100%;
-padding: 12px;
-border: 1px solid #e2e8f0;
-border-radius: 8px;
-font-size: 1rem;
-background: var(--bg);
-transition: all 0.3s ease;
-}
-input:focus, textarea:focus {
-outline: none;
-border-color: var(--accent);
-}
+    .btn {
+    background: var(--gradient);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    }
+    .btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    }
+    .btn-link {
+    background: none;
+    color: var(--muted);
+    text-decoration: underline;
+    margin-left: 10px;
+    cursor: pointer;
+    border: none;
+    }
 
-.btn {
-background: var(--gradient);
-color: white;
-border: none;
-padding: 12px 24px;
-border-radius: 8px;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.3s ease;
-}
-.btn:hover {
-opacity: 0.9;
-transform: translateY(-1px);
-}
-.btn-link {
-background: none;
-color: var(--muted);
-text-decoration: underline;
-margin-left: 10px;
-cursor: pointer;
-border: none;
-}
+    /* Forum Post Cards */
+    .post-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    }
+    .post-card:hover {
+    transform: translateY(-3px);
+    }
+    .post-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+    }
+    .post-title {
+    color: var(--accent);
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+    }
 
-/* Forum Post Cards */
-.post-card {
-background: var(--card);
-border-radius: var(--radius);
-padding: 24px;
-box-shadow: var(--shadow);
-margin-bottom: 20px;
-border: 1px solid rgba(0,0,0,0.05);
-transition: all 0.3s ease;
-}
-.post-card:hover {
-transform: translateY(-3px);
-}
-.post-meta {
-display: flex;
-justify-content: space-between;
-font-size: 0.85rem;
-color: var(--muted);
-margin-bottom: 10px;
-}
-.post-title {
-color: var(--accent);
-font-size: 1.3rem;
-margin-bottom: 10px;
-font-weight: 700;
-}
+    /* Comments Section */
+    .comments-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e2e8f0;
+    }
+    .comment {
+    background: #f1f5f9;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    }
+    .comment-meta {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+    }
 
-/* Comments Section */
-.comments-section {
-margin-top: 15px;
-padding-top: 15px;
-border-top: 1px solid #e2e8f0;
-}
-.comment {
-background: #f1f5f9;
-padding: 10px 15px;
-border-radius: 8px;
-margin-bottom: 8px;
-font-size: 0.95rem;
-}
-.comment-meta {
-font-size: 0.75rem;
-color: var(--muted);
-margin-bottom: 4px;
-}
-
-.hidden {
-display: none !important;
-}
-footer {
-text-align: center;
-margin-top: 40px;
-color: var(--muted);
-font-size: 0.9rem;
-padding: 20px;
-border-top: 1px solid #e2e8f0;
-}
-</style>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    .hidden {
+    display: none !important;
+    }
+    footer {
+    text-align: center;
+    margin-top: 40px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 20px;
+    border-top: 1px solid #e2e8f0;
+    }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="site-wrapper">
 <div class="site">
 <header>
-<h1>Katran Dergi - Diyalog Forumu</h1>
-<nav>
-    <a href="index.html">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Ana Sayfa
-    </a>
-    
-    <a href="yazilar.html">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        Yazılar
-    </a>
-    
-    <a href="kolektif.html">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Kolektif
-    </a>
-    
-    <a href="hakkinda.html">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-        Hakkında
-    </a>
-    
-    <a href="forum.html">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Forum
-    </a>
-</nav>
+    <h1>Katran Dergi - Diyalog Forumu</h1>
+    <nav>
+        <a href="index.html">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Ana Sayfa
+        </a>
+        
+        <a href="yazilar.html">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Yazılar
+        </a>
+        
+        <a href="kolektif.html">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Kolektif
+        </a>
+        
+        <a href="hakkinda.html">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            Hakkında
+        </a>
+        
+        <a href="forum.html">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Forum
+        </a>
+    </nav>
 </header>
 
 <main>
-<section id="authSection" class="auth-box">
-<h2 id="authTitle">Kolektif Diyaloğa Katıl</h2>
-<form id="authForm">
-<div class="input-group">
-<label>E-posta</label>
-<input type="email" id="authEmail" required>
-</div>
-<div class="input-group">
-<label>Şifre</label>
-<input type="password" id="authPassword" required>
-</div>
-<button type="submit" class="btn" id="authBtn">Giriş Yap</button>
-<button type="button" class="btn-link" id="toggleAuth">Hesap Oluştur</button>
-</form>
-</section>
+    <section id="authSection" class="auth-box">
+        <h2 id="authTitle">Kolektif Diyaloğa Katıl</h2>
+        <form id="authForm">
+            <div class="input-group">
+                <label>E-posta</label>
+                <input type="email" id="authEmail" required>
+            </div>
+            <div class="input-group">
+                <label>Şifre</label>
+                <input type="password" id="authPassword" required>
+            </div>
+            <button type="submit" class="btn" id="authBtn">Giriş Yap</button>
+            <button type="button" class="btn-link" id="toggleAuth">Hesap Oluştur</button>
+        </form>
+    </section>
 
-<section id="forumFormSection" class="forum-form hidden">
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-<span id="welcomeText" style="font-weight: 600;"></span>
-<button class="btn" id="logoutBtn" style="padding: 6px 12px; font-size: 0.85rem;">Çıkış Yap</button>
-</div>
-<h2>Yeni Bir Tartışma Başlat</h2>
-<form id="newPostForm">
-<div class="input-group">
-<label>Başlık</label>
-<input type="text" id="postTitle" required placeholder="Tartışma konusunun özeti...">
-</div>
-<div class="input-group">
-<label>İçerik / Fikriniz</label>
-<textarea id="postContent" rows="4" required placeholder="Dogmalardan uzak, yapıcı fikriniz..."></textarea>
-</div>
-<button type="submit" class="btn">Paylaş</button>
-</form>
-</section>
+    <section id="forumFormSection" class="forum-form hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <span id="welcomeText" style="font-weight: 600;"></span>
+            <button class="btn" id="logoutBtn" style="padding: 6px 12px; font-size: 0.85rem;">Çıkış Yap</button>
+        </div>
+        <h2>Yeni Bir Tartışma Başlat</h2>
+        <form id="newPostForm">
+            <div class="input-group">
+                <label>Başlık</label>
+                <input type="text" id="postTitle" required placeholder="Tartışma konusunun özeti...">
+            </div>
+            <div class="input-group">
+                <label>İçerik / Fikriniz</label>
+                <textarea id="postContent" rows="4" required placeholder="Dogmalardan uzak, yapıcı fikriniz..."></textarea>
+            </div>
+            <button type="submit" class="btn">Paylaş</button>
+        </form>
+    </section>
 
-<section id="postsContainer">
-</section>
+    <section id="postsContainer"></section>
 </main>
 
 <footer>
-&copy; Katran Dergi — Kırmızı karanfil ektik, katranın bağrına
+    &copy; Katran Dergi — Kırmızı karanfil ektik, katranın bağrına
 </footer>
 </div>
 </div>
 
 <script>
 // --- SUPABASE BAĞLANTISI ---
-const SUPABASE_URL = "https://amsidonkrwwzkcbzuoct.supabase.co";
+// NOT: Buradaki bilgileri kendi yeni projenizin linki ve Publishable key'i ile güncellediğinizden emin olun.
+const SUPABASE_URL = "https://amsidonkrwwzkcbzuoct.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_Jv_jxq7c8ZFws0g8S_nklA_xOMPLxpL";
 
-// DÜZELTME: window.supabase kullanılarak kütüphane doğru şekilde başlatıldı
+// Çift tanımlama hatası giderildi. Supabase istemcisi sadece 1 kere oluşturuluyor.
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- DOM ELEMENTLERİ ---
@@ -379,7 +378,7 @@ authForm.addEventListener('submit', async (e) => {
         if (isSignUpMode) {
             const { error } = await supabase.auth.signUp({ email, password });
             if (error) alert("Kayıt hatası: " + error.message);
-            else alert("Kayıt başarılı! Eğer panelde e-posta doğrulaması aktifse gelen kutunuzu kontrol edin, aktif değilse direkt giriş yapabilirsiniz.");
+            else alert("Kayıt başarılı! Lütfen e-posta adresinize gönderilen doğrulama linkine tıklayın.");
         } else {
             const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) alert("Giriş hatası: " + error.message);
@@ -498,7 +497,6 @@ async function addComment(e, postId) {
         alert("Yorum gönderilirken bir hata oluştu.");
     }
 }
-
 </script>
 </body>
 </html>
